@@ -1,0 +1,13 @@
+name: PowerClean
+main: com.mengcraft.cleaner.Main
+version: 0.1.4
+
+commands:
+  cleaner:
+    description: Default command.
+    permission: cleaner.admin
+    
+permissions:
+  cleaner.admin:
+    description: Operator permission.
+    default: op
