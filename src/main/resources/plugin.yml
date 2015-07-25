@@ -1,6 +1,6 @@
 name: PowerClean
 main: com.mengcraft.cleaner.Main
-version: 0.1.4
+version: 0.1.5
 
 commands:
   cleaner:

@@ -1,0 +1,7 @@
+default:
+  ignore-list:
+  - 'ITEM_FRAME'
+  - 'ARMOR_STAND'
+  - 'PAINTING'
+  - 'IRON_GOLEM'
+  - 'HORSE'

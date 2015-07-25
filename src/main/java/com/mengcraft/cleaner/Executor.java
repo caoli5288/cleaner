@@ -25,9 +25,11 @@ import com.mengcraft.cleaner.util.OptionParser;
 public class Executor implements CommandExecutor {
 
     private final Main main;
+    private final List<String> list;
 
     public Executor(Main main) {
         this.main = main;
+        this.list = main.whiteList();
     }
 
     @Override
@@ -62,65 +64,65 @@ public class Executor implements CommandExecutor {
 
     private String[] findInfomation() {
         Map<String, Integer> map = new HashMap<>();
-        
+
         for (World world : main.getServer().getWorlds()) {
             count(map, world.getEntities().toArray(new Entity[] {}));
         }
-        
+
         return infomation(map);
     }
 
     private String[] findChunk() {
-        
+
         Map<Chunk, Integer> map = new HashMap<>();
-        
+
         for (World world : main.getServer().getWorlds()) {
             put(map, world);
         }
-        
+
         Chunk chunk = select(map);
-        
+
         if (chunk == null) {
             return new String[] { "§6没有找到任何实体信息" };
         }
-        
+
         ArrayBuilder<String> builder = new ArrayBuilder<>();
-        
+
         Entity[] entities = chunk.getEntities();
-        
+
         Map<String, Integer> count = new HashMap<>();
-        
+
         count(count, entities);
-        
+
         Location loc = entities[0].getLocation();
-        
+
         builder.append("§6实体数最多的区块位于:");
         builder.append("§6- World(" + chunk.getWorld().getName() + "),"
-                + "Location(" + loc.getBlockX() + "," + 
-                                loc.getBlockY() + "," + 
-                                loc.getBlockZ() + ")");
+                + "Location(" + loc.getBlockX() + "," +
+                loc.getBlockY() + "," +
+                loc.getBlockZ() + ")");
         builder.append("§6该区块实体信息如下列：");
-        
+
         String[] infomation = infomation(count);
-        
+
         for (String string : infomation) {
             builder.append(string);
         }
-        
+
         return builder.build(String.class);
     }
 
     private String[] infomation(Map<String, Integer> count) {
         ArrayBuilder<String> builder = new ArrayBuilder<>();
-        
+
         for (Entry<String, Integer> entry : count.entrySet()) {
             builder.append("§6- Entity(" + entry.getKey() + ")," +
                     "Counts(" + entry.getValue() + ")");
         }
-        
+
         builder.append("§6- Summation(" + sum(count.values())
                 + ")");
-        
+
         return builder.build(String.class);
     }
 
@@ -129,12 +131,12 @@ public class Executor implements CommandExecutor {
         for (Integer in : values) {
             out += in;
         }
-        return  out;
+        return out;
     }
 
     private void count(Map<String, Integer> map, Entity[] entities) {
         for (Entity entity : entities) {
-            String type   = entity.getType().name().toLowerCase();
+            String type = entity.getType().name().toLowerCase();
             Integer value = map.get(type);
             if (value != null) {
                 map.put(type, value + 1);
@@ -156,9 +158,9 @@ public class Executor implements CommandExecutor {
 
     private void put(Map<Chunk, Integer> map, World world) {
         for (Entity entity : world.getEntities()) {
-            Chunk   chunk = entity.getLocation().getChunk();
+            Chunk chunk = entity.getLocation().getChunk();
             Integer value = map.get(chunk);
-            
+
             if (value != null) {
                 map.put(chunk, value + 1);
             } else {
@@ -169,7 +171,7 @@ public class Executor implements CommandExecutor {
 
     private String clean(ArrayVector<String> vec) {
         if (vec.hasNext()) {
-            
+
             OptionDefine[] defines = {
                     new OptionDefine("world", 1),
                     new OptionDefine("type", 1),
@@ -178,33 +180,33 @@ public class Executor implements CommandExecutor {
 
             String[] remain = getRemainArray(vec);
             Option option = new OptionParser(defines).parse(remain);
-            
+
             if (option.others().size() > 0 || option.alones().size() > 0) {
                 return "§4未知的命令参数！";
             }
-            
+
             List<World> worlds;
-            
+
             if (option.has("world")) {
                 String name = option.get("world").argument();
                 World world = main.getServer().getWorld(name);
-                
+
                 if (world == null) {
                     return "§4找不到" + name + "世界！";
                 }
-                
+
                 worlds = new ArrayList<>();
                 worlds.add(world);
             } else {
                 worlds = main.getServer().getWorlds();
             }
-            
-            String type = option.has("type") ? 
-                    option.get("type").argument() : 
+
+            String type = option.has("type") ?
+                    option.get("type").argument() :
                     null;
-            
+
             int limit;
-            
+
             if (option.has("limit")) {
                 String line = option.get("limit").argument();
                 try {
@@ -215,12 +217,12 @@ public class Executor implements CommandExecutor {
             } else {
                 limit = 16;
             }
-            
+
             return "§6清理掉了" +
-                clean(worlds, type, limit) + "个实体";
+                    clean(worlds, type, limit) + "个实体";
         } else {
             return "§6清理掉了" +
-                clean(main.getServer().getWorlds(), null, 16) + "个实体";
+                    clean(main.getServer().getWorlds(), null, 16) + "个实体";
         }
     }
 
@@ -231,7 +233,7 @@ public class Executor implements CommandExecutor {
         }
         return builder.build(String.class);
     }
-    
+
     private int clean(List<World> worlds, String type, int limit) {
         List<Entity> list = new ArrayList<>();
 
@@ -246,9 +248,9 @@ public class Executor implements CommandExecutor {
         List<Entity> near;
 
         while (iterat.hasNext()) {
-            
+
             entity = iterat.next();
-            near   = entity.getNearbyEntities(8, 8, 8);
+            near = entity.getNearbyEntities(8, 8, 8);
 
             if (type != null) {
                 cutIfType(near, type);
@@ -283,10 +285,9 @@ public class Executor implements CommandExecutor {
     private void putIfType(List<Entity> list, World world, String type) {
         for (Entity entity : world.getEntities()) {
             String name = entity.getType().name();
-            boolean isEntity = !name.equals("PLAYER") &&
-                               (type == null || 
-                               type.equalsIgnoreCase(name)
-                               );
+            boolean isEntity = name.equals("PLAYER") ? false :
+                    type != null ? type.toUpperCase().equals(name) :
+                            !list.contains(name);
             if (isEntity) {
                 list.add(entity);
             }
