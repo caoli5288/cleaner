@@ -1,13 +1,10 @@
 package com.mengcraft.cleaner;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
+import com.mengcraft.cleaner.util.ArrayBuilder;
+import com.mengcraft.cleaner.util.ArrayVector;
+import com.mengcraft.cleaner.util.Option;
+import com.mengcraft.cleaner.util.OptionDefine;
+import com.mengcraft.cleaner.util.OptionParser;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -16,11 +13,15 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 
-import com.mengcraft.cleaner.util.ArrayBuilder;
-import com.mengcraft.cleaner.util.ArrayVector;
-import com.mengcraft.cleaner.util.Option;
-import com.mengcraft.cleaner.util.OptionDefine;
-import com.mengcraft.cleaner.util.OptionParser;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import static java.util.Arrays.asList;
 
 public class Executor implements CommandExecutor {
 
@@ -33,8 +34,7 @@ public class Executor implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd,
-            String lable, String[] args) {
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         ArrayVector<String> vec = new ArrayVector<>(args);
         if (vec.hasNext()) {
             String next = vec.next();
@@ -66,7 +66,7 @@ public class Executor implements CommandExecutor {
         Map<String, Integer> map = new HashMap<>();
 
         for (World world : main.getServer().getWorlds()) {
-            count(map, world.getEntities().toArray(new Entity[] {}));
+            count(map, world.getEntities());
         }
 
         return infomation(map);
@@ -83,7 +83,7 @@ public class Executor implements CommandExecutor {
         Chunk chunk = select(map);
 
         if (chunk == null) {
-            return new String[] { "§6没有找到任何实体信息" };
+            return new String[]{"§6没有找到任何实体信息"};
         }
 
         ArrayBuilder<String> builder = new ArrayBuilder<>();
@@ -92,13 +92,13 @@ public class Executor implements CommandExecutor {
 
         Map<String, Integer> count = new HashMap<>();
 
-        count(count, entities);
+        count(count, asList(entities));
 
         Location loc = entities[0].getLocation();
 
         builder.append("§6实体数最多的区块位于:");
-        builder.append("§6- World(" + chunk.getWorld().getName() + "),"
-                + "Location(" + loc.getBlockX() + "," +
+        builder.append("§6- World(" + chunk.getWorld().getName() + ")," +
+                "Location(" + loc.getBlockX() + "," +
                 loc.getBlockY() + "," +
                 loc.getBlockZ() + ")");
         builder.append("§6该区块实体信息如下列：");
@@ -134,7 +134,7 @@ public class Executor implements CommandExecutor {
         return out;
     }
 
-    private void count(Map<String, Integer> map, Entity[] entities) {
+    private void count(Map<String, Integer> map, Collection<Entity> entities) {
         for (Entity entity : entities) {
             String type = entity.getType().name().toLowerCase();
             Integer value = map.get(type);
@@ -282,14 +282,11 @@ public class Executor implements CommandExecutor {
         }
     }
 
-    private void putIfType(List<Entity> list, World world, String type) {
+    private void putIfType(List<Entity> in, World world, String type) {
         for (Entity entity : world.getEntities()) {
             String name = entity.getType().name();
-            boolean isEntity = name.equals("PLAYER") ? false :
-                    type != null ? type.toUpperCase().equals(name) :
-                            !list.contains(name);
-            if (isEntity) {
-                list.add(entity);
+            if (!name.equals("PLAYER") && (type != null ? type.toUpperCase().equals(name) : !list.contains(name))) {
+                in.add(entity);
             }
         }
     }
